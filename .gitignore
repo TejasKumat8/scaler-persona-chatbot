@@ -1,0 +1,27 @@
+# .gitignore for Scaler Persona Chatbot
+
+# Environment files — NEVER commit real API keys
+.env
+.env.local
+.env.*.local
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (if ever added)
+node_modules/
+npm-debug.log*
+
+# Build artifacts
+dist/
+build/
+.vercel/

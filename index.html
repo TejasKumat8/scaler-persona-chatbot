@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Chat with Scaler Academy's top personalities — Anshuman Singh, Abhimanyu Saxena, and Kshitij Mishra. An AI-powered persona chatbot." />
+  <title>Scaler Persona Chat — Talk to Anshuman, Abhimanyu & Kshitij</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Background decorative blobs -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">⚡</span>
+          <span class="logo-text">Scaler Chat</span>
+        </div>
+        <p class="sidebar-tagline">Talk to the minds behind Scaler</p>
+      </div>
+
+      <nav class="persona-nav" role="navigation" aria-label="Persona selection">
+        <p class="nav-label">Choose a Persona</p>
+
+        <button class="persona-btn active" id="btn-anshuman" data-persona="anshuman" aria-pressed="true">
+          <div class="persona-avatar anshuman-avatar">AS</div>
+          <div class="persona-info">
+            <span class="persona-name">Anshuman Singh</span>
+            <span class="persona-role">Co-founder &amp; CEO, Scaler</span>
+          </div>
+          <span class="active-dot"></span>
+        </button>
+
+        <button class="persona-btn" id="btn-abhimanyu" data-persona="abhimanyu" aria-pressed="false">
+          <div class="persona-avatar abhimanyu-avatar">AX</div>
+          <div class="persona-info">
+            <span class="persona-name">Abhimanyu Saxena</span>
+            <span class="persona-role">Co-founder, Scaler &amp; InterviewBit</span>
+          </div>
+          <span class="active-dot"></span>
+        </button>
+
+        <button class="persona-btn" id="btn-kshitij" data-persona="kshitij" aria-pressed="false">
+          <div class="persona-avatar kshitij-avatar">KM</div>
+          <div class="persona-info">
+            <span class="persona-name">Kshitij Mishra</span>
+            <span class="persona-role">Instructor &amp; DSA Mentor, Scaler</span>
+          </div>
+          <span class="active-dot"></span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="api-key-section">
+          <label for="api-key-input" class="api-key-label">
+            <span class="key-icon">🔑</span> Gemini API Key
+          </label>
+          <div class="api-key-input-wrapper">
+            <input
+              type="password"
+              id="api-key-input"
+              placeholder="Enter your Gemini API key..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="save-key-btn" aria-label="Save API key">Save</button>
+          </div>
+          <p class="api-key-hint">Key is stored in your browser only. Never shared.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile sidebar toggle -->
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+      <span></span><span></span><span></span>
+    </button>
+
+    <!-- Main chat area -->
+    <main class="chat-area">
+      <!-- Chat header -->
+      <header class="chat-header" id="chat-header">
+        <div class="chat-header-persona">
+          <div class="header-avatar anshuman-avatar" id="header-avatar">AS</div>
+          <div class="header-persona-info">
+            <h1 class="header-name" id="header-name">Anshuman Singh</h1>
+            <p class="header-role" id="header-role">Co-founder &amp; CEO · Scaler Academy</p>
+          </div>
+          <div class="online-badge">
+            <span class="online-dot"></span>
+            <span>AI Active</span>
+          </div>
+        </div>
+        <button class="clear-btn" id="clear-btn" title="Clear conversation">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3,6 5,6 21,6"></polyline>
+            <path d="M19,6l-1,14a2,2 0 0,1-2,2H8a2,2 0 0,1-2-2L5,6"></path>
+            <path d="M10,11v6M14,11v6"></path>
+          </svg>
+          Clear
+        </button>
+      </header>
+
+      <!-- Messages container -->
+      <div class="messages-container" id="messages-container" role="log" aria-live="polite" aria-label="Chat messages">
+        <!-- Welcome screen -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-avatar anshuman-avatar" id="welcome-avatar">AS</div>
+          <h2 class="welcome-title">Hey, I'm <span id="welcome-name">Anshuman Singh</span>!</h2>
+          <p class="welcome-subtitle" id="welcome-subtitle">Co-founder &amp; CEO of Scaler Academy. Ask me anything about careers, tech, coding journeys, or building something great.</p>
+
+          <div class="chips-section">
+            <p class="chips-label">Try asking:</p>
+            <div class="chips-grid" id="chips-grid">
+              <!-- Chips injected by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing indicator (hidden by default) -->
+      <div class="typing-indicator" id="typing-indicator" aria-live="polite" aria-hidden="true">
+        <div class="typing-avatar" id="typing-avatar">AS</div>
+        <div class="typing-bubble">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <span class="typing-text" id="typing-text">Anshuman is thinking...</span>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-banner" id="error-banner" role="alert" aria-hidden="true">
+        <span class="error-icon">⚠️</span>
+        <span id="error-message">Something went wrong. Please try again.</span>
+        <button class="error-close" id="error-close" aria-label="Dismiss error">✕</button>
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <textarea
+            id="message-input"
+            placeholder="Ask Anshuman anything..."
+            rows="1"
+            aria-label="Type your message"
+            maxlength="2000"
+          ></textarea>
+          <button class="send-btn" id="send-btn" aria-label="Send message" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">AI-generated · For educational/demo purposes only</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="prompts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
