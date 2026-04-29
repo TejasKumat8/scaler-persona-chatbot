@@ -6,6 +6,9 @@
 .env.*.local
 *.env
 
+# Local API key config — contains real keys, gitignored
+config.js
+
 # OS files
 .DS_Store
 Thumbs.db

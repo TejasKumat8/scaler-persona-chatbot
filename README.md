@@ -34,7 +34,7 @@
 | Layer | Technology |
 |---|---|
 | Frontend | HTML5, Vanilla CSS, Vanilla JavaScript |
-| AI API | Google Gemini 2.0 Flash (`gemini-2.0-flash`) |
+| AI API | Groq API — Llama 3.3 70B (`llama-3.3-70b-versatile`) |
 | Deployment | Vercel / Netlify (static site) |
 
 No build step required — this is a pure static site.
@@ -45,7 +45,7 @@ No build step required — this is a pure static site.
 
 ### Prerequisites
 - A modern browser (Chrome, Firefox, Safari, Edge)
-- A [Google Gemini API key](https://aistudio.google.com/app/apikey) (free tier available)
+- A [Groq API key](https://console.groq.com/keys) (free tier available — no credit card needed)
 
 ### Steps
 
@@ -65,10 +65,10 @@ start index.html
 ### Configure API Key
 
 1. Open the app in your browser
-2. In the **sidebar footer**, enter your Gemini API key
-3. Click **Save** — the key is stored in `localStorage` only (never sent anywhere except Google's API)
+2. In the **sidebar footer**, enter your Groq API key
+3. Click **Save** — the key is stored in `localStorage` only (never sent anywhere except Groq's API)
 
-> **Note:** The `.env.example` file is provided for reference. Since this is a client-side app, there is no server — the API key is stored securely in your browser's localStorage only. A production version would use a backend proxy to protect the key.
+> **Get a free Groq key:** Go to [console.groq.com/keys](https://console.groq.com/keys), sign up, and create an API key. The free tier is generous with fast inference.
 
 ---
 

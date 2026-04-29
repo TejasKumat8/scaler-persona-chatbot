@@ -1,6 +1,6 @@
 /**
  * app.js — Scaler Persona Chatbot Application Logic
- * Uses Google Gemini API (gemini-1.5-flash or gemini-2.0-flash-exp)
+ * Uses Groq API with Llama 3.3 70B model (groq.com — free tier available)
  * API key stored in localStorage only — never hardcoded
  */
 
@@ -10,7 +10,7 @@
    STATE
    ============================================= */
 let currentPersona = "anshuman";
-let conversationHistory = []; // [ { role: "user"|"model", parts: [{text}] } ]
+let conversationHistory = []; // [ { role: "user"|"assistant", content: "..." } ]  — OpenAI/Groq format
 let isLoading = false;
 
 /* =============================================
@@ -46,7 +46,7 @@ const appWrapper = document.querySelector(".app-wrapper");
    ============================================= */
 function init() {
   // Load saved API key
-  const savedKey = localStorage.getItem("gemini_api_key");
+  const savedKey = localStorage.getItem("groq_api_key");
   if (savedKey) {
     apiKeyInput.value = savedKey;
     apiKeyInput.setAttribute("placeholder", "API key saved ✓");
@@ -215,10 +215,10 @@ function closeSidebar() {
 function saveApiKey() {
   const key = apiKeyInput.value.trim();
   if (!key) {
-    showError("Please enter a valid API key.");
+    showError("Please enter a valid Groq API key.");
     return;
   }
-  localStorage.setItem("gemini_api_key", key);
+  localStorage.setItem("groq_api_key", key);
   saveKeyBtn.textContent = "Saved ✓";
   saveKeyBtn.style.background = "linear-gradient(135deg, #10b981, #059669)";
   setTimeout(() => {
@@ -228,7 +228,7 @@ function saveApiKey() {
 }
 
 function getApiKey() {
-  return localStorage.getItem("gemini_api_key") || apiKeyInput.value.trim();
+  return localStorage.getItem("groq_api_key") || apiKeyInput.value.trim() || (typeof GROQ_API_KEY !== "undefined" ? GROQ_API_KEY : "");
 }
 
 /* =============================================
@@ -241,7 +241,7 @@ async function handleSend() {
   const apiKey = getApiKey();
   if (!apiKey) {
     showError(
-      "No API key found. Please enter your Gemini API key in the sidebar and click Save."
+      "No API key found. Please enter your Groq API key in the sidebar and click Save. Get a free key at groq.com"
     );
     return;
   }
@@ -252,8 +252,8 @@ async function handleSend() {
   // Add user message to UI
   appendMessage("user", text);
 
-  // Add to history
-  conversationHistory.push({ role: "user", parts: [{ text }] });
+  // Add to history (Groq/OpenAI format)
+  conversationHistory.push({ role: "user", content: text });
 
   // Clear input
   messageInput.value = "";
@@ -266,8 +266,8 @@ async function handleSend() {
   hideError();
 
   try {
-    const reply = await callGeminiAPI(apiKey, text);
-    conversationHistory.push({ role: "model", parts: [{ text: reply }] });
+    const reply = await callGroqAPI(apiKey);
+    conversationHistory.push({ role: "assistant", content: reply });
     appendMessage("ai", reply);
   } catch (err) {
     showError(formatApiError(err));
@@ -282,37 +282,35 @@ async function handleSend() {
 }
 
 /* =============================================
-   GEMINI API CALL
+   GROQ API CALL (Llama 3.3 70B)
    ============================================= */
-async function callGeminiAPI(apiKey, userText) {
+async function callGroqAPI(apiKey) {
   const persona = PERSONAS[currentPersona];
-  const MODEL = "gemini-2.0-flash";
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+  const MODEL = "llama-3.3-70b-versatile";
+  const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-  // Build request body — Gemini uses system_instruction + multi-turn contents
+  // Build messages array — Groq uses OpenAI-compatible format
+  // System message first, then the conversation history
+  const messages = [
+    { role: "system", content: persona.systemPrompt },
+    ...conversationHistory,
+  ];
+
   const requestBody = {
-    system_instruction: {
-      parts: [{ text: persona.systemPrompt }],
-    },
-    contents: conversationHistory,
-    generationConfig: {
-      temperature: 0.85,
-      topP: 0.95,
-      topK: 40,
-      maxOutputTokens: 1024,
-      candidateCount: 1,
-    },
-    safetySettings: [
-      { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-      { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-    ],
+    model: MODEL,
+    messages,
+    temperature: 0.85,
+    max_tokens: 1024,
+    top_p: 0.95,
+    stream: false,
   };
 
   const response = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
     body: JSON.stringify(requestBody),
   });
 
@@ -325,31 +323,25 @@ async function callGeminiAPI(apiKey, userText) {
 
   const data = await response.json();
 
-  // Extract text from response
-  const candidate = data?.candidates?.[0];
-  if (!candidate) throw new Error("No response generated.");
-  if (candidate.finishReason === "SAFETY") {
-    throw new Error("Response blocked by safety filters. Try rephrasing your question.");
-  }
-
-  const text = candidate?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Empty response from API.");
+  // Extract text from OpenAI-compatible response
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) throw new Error("Empty response from Groq API.");
 
   return text;
 }
 
 function formatApiError(err) {
   const msg = err.message || "Unknown error";
-  if (msg.includes("API_KEY_INVALID") || msg.includes("API key")) {
-    return "Invalid API key. Please check your Gemini API key in the sidebar.";
+  if (msg.includes("invalid_api_key") || msg.includes("Invalid API Key") || msg.includes("401")) {
+    return "Invalid Groq API key. Please check your key in the sidebar. Get a free key at groq.com";
   }
-  if (msg.includes("QUOTA_EXCEEDED") || msg.includes("quota")) {
-    return "API quota exceeded. Please check your Gemini API usage limits.";
+  if (msg.includes("rate_limit") || msg.includes("quota") || msg.includes("429")) {
+    return "Groq rate limit reached. Please wait a moment and try again — Groq free tier resets quickly!";
   }
-  if (msg.includes("404")) {
-    return "Model not found. Please check your API key has access to Gemini 2.0 Flash.";
+  if (msg.includes("404") || msg.includes("model")) {
+    return "Model not found. Please check your Groq API key has access to Llama 3.3 70B.";
   }
-  if (msg.includes("fetch") || msg.includes("network")) {
+  if (msg.includes("fetch") || msg.includes("network") || msg.includes("Failed to fetch")) {
     return "Network error. Please check your internet connection and try again.";
   }
   return `Error: ${msg}`;
