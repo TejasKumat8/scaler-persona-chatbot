@@ -1,0 +1,4 @@
+{
+  "buildCommand": "echo \"const GROQ_API_KEY = '$GROQ_API_KEY';\" > config.js",
+  "outputDirectory": "."
+}
